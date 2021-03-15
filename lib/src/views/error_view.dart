@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 class ErrorView extends StatelessWidget {
   final Function reload;
 
-  const ErrorView({Key key, @required this.reload});
+  const ErrorView({Key? key, required this.reload});
 
   @override
   Widget build(BuildContext context) {
@@ -28,7 +28,7 @@ class ErrorView extends StatelessWidget {
                 child: CupertinoButton(
                   child: Text('Reload'),
                   color: Colors.blue,
-                  onPressed: reload,
+                  onPressed: reload as void Function()?,
                 ),
               ),
             ],

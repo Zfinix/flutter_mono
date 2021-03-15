@@ -1,16 +1,16 @@
 name: flutter_mono
 description: An unofficial plugin for using Mono Connect SDK https://mono.co
-version: 1.0.0
+version: 2.0.0
 homepage: https://github.com/zfinix/flutter_mono
 
 environment:
-  sdk: ">=2.7.0 <3.0.0"
-  flutter: ">=1.17.0 <2.0.0"
+  sdk: '>=2.12.0 <3.0.0'
+  
 
 dependencies:
   flutter:
     sdk: flutter
-  flutter_webview_plugin: ^0.3.11
+  webview_flutter: ^2.0.1
 
 dev_dependencies:
   flutter_test:
@@ -20,4 +20,3 @@ dev_dependencies:
 # following page: https://dart.dev/tools/pub/pubspec
 
 # The following section is specific to Flutter.
-flutter:

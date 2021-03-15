@@ -6,30 +6,34 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_webview_plugin/flutter_webview_plugin.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
 import '../raw/mono_html.dart';
 import 'error_view.dart';
 
 class MonoView extends StatefulWidget {
   /// Public Key from your https://app.withmono.com/apps
-  final String apiKey;
+  final String? apiKey;
 
   /// Success callback
-  final Function(String code) onSuccess;
+  final Function(String code)? onSuccess;
 
   /// Mono popup Close callback
-  final Function onClosed;
+  final Function? onClosed;
 
   /// Error Widget will show if loading fails
-  final Widget error;
+  final Widget? error;
 
-  const MonoView({
-    Key key,
-    @required this.apiKey,
+  /// Show MonoView Logs
+  final bool showLogs;
+
+  const MonoView( {
+    Key? key,
+    required this.apiKey,
     this.error,
     this.onSuccess,
     this.onClosed,
+    this.showLogs = false,
   })  : assert(apiKey != null, 'API key cannot be null'),
         super(key: key);
 
@@ -38,46 +42,62 @@ class MonoView extends StatefulWidget {
 }
 
 class _MonoViewState extends State<MonoView> {
-  FlutterWebviewPlugin _webViewController = FlutterWebviewPlugin();
-  StreamSubscription<WebViewStateChanged> _onStateChanged;
-  StreamSubscription<WebViewHttpError> _onWebViewHttpError;
+  @override
+  void initState() {
+    super.initState();
+    _handleInit();
+    // Enable hybrid composition.
+  }
+
+  final Completer<WebViewController> _controller =
+      Completer<WebViewController>();
+  Future<WebViewController> get _webViewController => _controller.future;
   bool isLoading = false;
   bool hasError = false;
 
-  String contentBase64;
-
-  @override
-  void initState() {
-    _handleInit();
-    super.initState();
-  }
+  String? contentBase64;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: FutureBuilder<String>(
+    return Scaffold(
+      body: FutureBuilder<String>(
           future: _getURL(),
           builder: (context, snapshot) {
             if (hasError) {
-              return widget?.error ??
-                  ErrorView(reload: () {
+              return widget.error ??
+                  ErrorView(reload: () async {
                     setState(() {});
-                    _webViewController.reload();
+                    (await _webViewController).reload();
                   });
             } else
               return snapshot.hasData
-                  ? WebviewScaffold(
-                      url: snapshot?.data,
-                      javascriptChannels: {_monoJavascriptChannel()},
-                      mediaPlaybackRequiresUserGesture: false,
-                      withZoom: true,
-                      withLocalStorage: true,
-                      scrollBar: false,
-                      hidden: true,
-                      initialChild: Container(
-                        child:
-                            const Center(child: CupertinoActivityIndicator()),
-                      ),
+                  ? FutureBuilder<WebViewController>(
+                      future: _controller.future,
+                      builder: (BuildContext context,
+                          AsyncSnapshot<WebViewController> controller) {
+                        return WebView(
+                          initialUrl: snapshot.data!,
+                          
+                          onWebViewCreated:
+                              (WebViewController webViewController) {
+                            _controller.complete(webViewController);
+                          },
+                          javascriptChannels: {_monoJavascriptChannel()},
+                          javascriptMode: JavascriptMode.unrestricted,
+                          onPageStarted: (String url) {
+                            setState(() {
+                              isLoading = true;
+                            });
+                          },
+                          onPageFinished: (String url) {
+                            setState(() {
+                              isLoading = false;
+                            });
+                          },
+                          navigationDelegate: (_) =>
+                              _handleNavigationInterceptor(_),
+                        );
+                      },
                     )
                   : Center(child: CupertinoActivityIndicator());
           }),
@@ -89,52 +109,36 @@ class _MonoViewState extends State<MonoView> {
     return JavascriptChannel(
         name: 'MonoClientInterface',
         onMessageReceived: (JavascriptMessage message) {
-          if (kDebugMode) print('MonoClientInterface, ${message.message}');
+          if (widget.showLogs == true)
+            print('MonoClientInterface, ${message.message}');
           Map<String, dynamic> res = json.decode(message.message);
           handleResponse(res);
         });
   }
 
   /// parse event from javascript channel
-  void handleResponse(Map<String, dynamic> body) async {
+  void handleResponse(Map<String, dynamic>? body) async {
     try {
-      String key = body['type'];
+      String? key = body?['type'];
       if (body != null && key != null) {
         switch (key) {
           case 'mono.connect.widget.account_linked':
-          case 'mono.modal.linked':
-            var response = body['response'];
+            var response = body['data'];
             if (response == null) return;
             var code = response['code'];
-            if (widget.onSuccess != null) widget.onSuccess(code);
-            if (mounted) {
-              await _webViewController.close();
-              Navigator.pop(context);
-            }
+
+            if (widget.onSuccess != null) widget.onSuccess!(code);
             break;
           case 'mono.connect.widget.closed':
-          case 'mono.modal.closed':
-            if (widget.onClosed != null) widget.onClosed();
-            if (mounted) {
-              await _webViewController.close();
-              Navigator.pop(context);
-            }
+            if (mounted && widget.onClosed != null) widget.onClosed!();
             break;
           default:
         }
       }
     } catch (e) {
+      print('e.toString()');
       print(e.toString());
     }
-  }
-
-  /// Dispose unused Items
-  @override
-  void dispose() {
-    _onWebViewHttpError.cancel();
-    _onStateChanged.cancel();
-    _webViewController.dispose();
-    super.dispose();
   }
 
   Future<String> _getURL() async {
@@ -163,34 +167,18 @@ class _MonoViewState extends State<MonoView> {
     }
   }
 
-  void _handleInit() {
-    _onStateChanged =
-        _webViewController.onStateChanged.listen((viewState) async {
-      setState(() {
-        switch (viewState.type) {
-          case WebViewState.finishLoad:
-            isLoading = false;
-            hasError = false;
-
-            break;
-          case WebViewState.startLoad:
-            isLoading = true;
-            hasError = false;
-
-            break;
-          default:
-        }
-      });
-    });
-
-    _onWebViewHttpError = _webViewController.onHttpError.listen((err) async {
-      setState(() {
-        isLoading = false;
-        hasError = true;
-      });
-    });
-
-    // Hide Keyboard
+  void _handleInit() async {
     SystemChannels.textInput.invokeMethod('TextInput.hide');
+    if (Platform.isAndroid) WebView.platform = SurfaceAndroidWebView();
+  }
+
+  NavigationDecision _handleNavigationInterceptor(NavigationRequest request) {
+    if (request.url.toLowerCase().contains('mono')) {
+      // Navigate to all urls contianing mono
+      return NavigationDecision.navigate;
+    } else {
+      // Block all navigations outside mono
+      return NavigationDecision.prevent;
+    }
   }
 }

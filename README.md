@@ -8,6 +8,7 @@ This package make it easy to use the Mono connect widget in a flutter project.
 <p float="left">
 <img src="https://github.com/Zfinix/flutter_mono/blob/main/1.png?raw=true" width="200">
 <img src="https://github.com/Zfinix/flutter_mono/blob/main/2.png?raw=true" width="200">
+<img src="https://github.com/Zfinix/flutter_mono/blob/main/3.png?raw=true" width="200">
 </p>
 
 ### 🚀 How to Use plugin
@@ -22,9 +23,11 @@ import 'package:flutter_mono/flutter_mono.dart';
               context,
               key: 'Your Public Key', // from https://app.withmono.com/apps
               onClosed: () {
+                 Navigator.pop(context);
                   print('Widget closed')
               },
               onSuccess: (String code) {
+                 Navigator.pop(context);
                   print("Linked successfully: $code");
               },
         );
@@ -42,9 +45,11 @@ import 'package:flutter_mono/flutter_mono.dart';
      MonoView(
         apiKey: 'Your Public Key', // from https://app.withmono.com/apps
          onClosed: () {
+            Navigator.pop(context);
             print('Widget closed')
          },
          onSuccess: (String code) {
+            Navigator.pop(context);
             print("Linked successfully: $code");
          },
         error: Text('Error'),
