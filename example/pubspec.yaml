@@ -3,7 +3,6 @@ description: A new Flutter project.
 
 # The following line prevents the package from being accidentally published to
 # pub.dev using `pub publish`. This is preferred for private packages.
-publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 # The following defines the version and build number for your application.
 # A version number is three numbers separated by dots, like 1.2.43
@@ -17,6 +16,7 @@ publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 # https://developer.apple.com/library/archive/documentation/General/Reference/InfoPlistKeyReference/Articles/CoreFoundationKeys.html
 version: 1.0.0+1
 
+
 environment:
   sdk: '>=2.12.0 <3.0.0'
 
@@ -24,13 +24,12 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_mono: 
-    path: '../'  
+    path: '../'
 
 
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
-  cupertino_icons: ^1.0.0
-  modal_bottom_sheet: ^1.0.0+1
+  cupertino_icons: ^1.0.2
 
 dev_dependencies:
   flutter_test:
