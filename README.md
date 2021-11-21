@@ -39,10 +39,9 @@ import 'package:flutter_mono/flutter_mono.dart';
                },
                onEvent: (eventName, eventData) {
                   switch (eventName) {
-                     case '':
-                        break;
-                        default:
-                     }
+                     case 'mono.connect.institution_selected':
+                     /// do something
+                     break;
                   },
                   onSuccess: (data) {
                      print('Success: ${data.toJson()}');
