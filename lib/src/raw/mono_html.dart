@@ -1,5 +1,6 @@
 /// Raw mono html formation
-String buildMonoHtml(String? key) => '''
+String buildMonoHtml(String? key, [String? configJson, String reference = '']) =>
+    '''
 <!DOCTYPE html>
 <html lang="en">
 
@@ -15,21 +16,33 @@ String buildMonoHtml(String? key) => '''
     <script type="text/javascript">
         window.onload = setupMonoConnect;
         function setupMonoConnect() {
-            var connect;
-            var config = {
+            var connect = new Connect({
                 key: "$key",
-                onSuccess: function (data) {
-                    const response = { "type": "mono.modal.linked", response: { ...data } }
-                    MonoClientInterface.postMessage(JSON.stringify(response))
-                },
-                onClose: function () {
-                    const response = { type: 'mono.modal.closed', }
-                    MonoClientInterface.postMessage(JSON.stringify(response))
-                }
-            };
-            connect = new Connect(config)
-            connect.setup()
+                reference: `$reference`.length > 0 ? `$reference` : null,
+                onSuccess: (code) =>
+                    sendMessage({ type: "onSuccess", data: code}),
+                onLoad: () => sendMessage({ type: "onLoad" }),
+                onClose: () => sendMessage({ type: "onClose" }),
+                onEvent: (eventName, data) =>
+                  sendMessage({
+                    type: "onEvent",
+                    eventName: eventName,
+                    data: { ...data },
+                  }),
+            });
+
+            if ($configJson){
+              connect.setup(JSON.parse($configJson))
+            } else {
+              connect.setup()
+            }
+            
             connect.open()
+            function sendMessage(message) {
+              if (window.MonoClientInterface && window.MonoClientInterface.postMessage) {
+                  MonoClientInterface.postMessage(JSON.stringify(message));
+              }
+          } 
         }
     </script>
 </body>

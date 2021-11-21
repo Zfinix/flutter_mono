@@ -1,4 +1,10 @@
 
+## [2.0.3]
+ - Fixed flutter webview bugs
+ - Updated Mono Connect to latest docs specs
+ - Switched to Connectivity for Error handling
+ - More callbacks added
+
 ## [2.0.0]
  - Migrated to null saftey
  - Fixed navigation bugs
