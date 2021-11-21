@@ -38,9 +38,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
-  String? code = '';
+  MonoSuccessModel? success;
 
-  final monoPublicKey = '';
+  final monoPublicKey = 'your public key';
 
   @override
   Widget build(BuildContext context) {
@@ -54,59 +54,72 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
         ),
         centerTitle: true,
-        brightness: Brightness.light,
         backgroundColor: Colors.white,
       ),
       backgroundColor: Colors.white,
       body: Center(
-          child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          SelectableText(
-            code ?? '',
-            style: TextStyle(
-              color: monoColor,
-              fontWeight: FontWeight.w600,
-              fontSize: 25,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            SelectableText(
+              success?.data.code ?? '',
+              style: TextStyle(
+                color: monoColor,
+                fontWeight: FontWeight.w600,
+                fontSize: 25,
+              ),
             ),
-          ),
-          const SizedBox(height: 60),
-          Column(
-            children: [
-              Container(
-                height: 50,
-                width: 260,
-                child: CupertinoButton(
-                  color: monoColor,
-                  child: Center(
-                    child: Text(
-                      'Launch Mono',
-                      style: TextStyle(
-                        color: Colors.white,
+            const SizedBox(height: 60),
+            Column(
+              children: [
+                Container(
+                  height: 50,
+                  width: 260,
+                  child: CupertinoButton(
+                    color: monoColor,
+                    child: Center(
+                      child: Text(
+                        'Launch Mono',
+                        style: TextStyle(
+                          color: Colors.white,
+                        ),
                       ),
                     ),
+                    onPressed: () async {
+                      try {
+                        await MonoFlutter.launchMono(
+                          context,
+                          key: monoPublicKey,
+                         showLogs: true,
+                          reference: 'reference',
+                          onClose: () {
+                            print('onClose');
+                          },
+                          onLoad: () {
+                            print('onLoad');
+                          },
+                          onEvent: (eventName, eventData) {
+                            switch (eventName) {
+                              case '':
+                                break;
+                              default:
+                            }
+                          },
+                          onSuccess: (data) {
+                            print('Success: ${data.toJson()}');
+                          },
+                        );
+                      } catch (e) {
+                        print(e.toString());
+                      }
+                    },
                   ),
-                  onPressed: () async {
-                    await MonoFlutter.launchMono(
-                      context,
-                      key: monoPublicKey,
-                      onClosed: () {
-                        Navigator.pop(context);
-                      },
-                      onSuccess: (String _code) {
-                        setState(() {
-                          code = _code;
-                        });
-                        Navigator.pop(context);
-                      },
-                    );
-                  },
                 ),
-              ),
-            ],
-          ),
-        ],
-      )),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
