@@ -1,6 +1,6 @@
 name: flutter_mono
 description: An unofficial plugin for using Mono Connect SDK https://mono.co
-version: 2.0.3
+version: 2.0.3+1
 homepage: https://github.com/zfinix/flutter_mono
 
 environment:

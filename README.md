@@ -24,12 +24,12 @@ import 'package:flutter_mono/flutter_mono.dart';
                context,
                key: 'Your Public Key', // from https://app.withmono.com/apps
                reference: "some_random_string"
-               configJson: '{
+               configJson: '''{
                   "selectedInstitution": {
                     "id": "5f2d08c060b92e2888287706", 
                     "auth_method": "internet_banking" 
                   }
-               }' /// must be a valid JSON string
+               }''' /// must be a valid JSON string
                showLogs: true,
                onClose: () {
                   print('onClose');
@@ -60,12 +60,12 @@ import 'package:flutter_mono/flutter_mono.dart';
    MonoView(
       apiKey: 'Your Public Key', // from https://app.withmono.com/apps
       reference: "some_random_string"
-      configJson: '{
+      configJson: '''{
           "selectedInstitution": {
             "id": "5f2d08c060b92e2888287706", 
             "auth_method": "internet_banking" 
            }
-      }' /// must be a valid JSON string
+      }''' /// must be a valid JSON string
       showLogs: true,
       onClose: () {
          print('onClose');

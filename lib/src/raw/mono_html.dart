@@ -32,8 +32,8 @@ String buildMonoHtml(String? key,
                   }),
             });
 
-            if ($configJson){
-              connect.setup(JSON.parse($configJson))
+            if (`$configJson`.length > 0){
+              connect.setup(JSON.parse(`$configJson`))
             } else {
               connect.setup()
             }
