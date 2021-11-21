@@ -1,5 +1,6 @@
 /// Raw mono html formation
-String buildMonoHtml(String? key, [String? configJson, String reference = '']) =>
+String buildMonoHtml(String? key,
+        [String? configJson, String reference = '']) =>
     '''
 <!DOCTYPE html>
 <html lang="en">

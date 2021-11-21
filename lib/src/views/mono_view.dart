@@ -36,10 +36,10 @@ class MonoView extends StatefulWidget {
   /// further insight into the Mono Connect onboarding flow.
   ///
   ///
-  /// The onEvent callback returns two paramters, 
-  /// 
-  /// `eventName` a string containing The event name and 
-  /// 
+  /// The onEvent callback returns two paramters,
+  ///
+  /// `eventName` a string containing The event name and
+  ///
   /// `eventData` an object that contains event metadata.
 
   final Function(String eventName, Map<String, dynamic> eventData)? onEvent;
