@@ -92,6 +92,12 @@ class _MyHomePageState extends State<MyHomePage> {
                           key: monoPublicKey,
                           showLogs: true,
                           reference: 'reference',
+                          configJson: '''{
+                                "selectedInstitution": {
+                                  "id": "5f2d08c060b92e2888287706", 
+                                  "auth_method": "internet_banking" 
+                                }
+                          }''',
                           onClose: () {
                             print('onClose');
                           },
