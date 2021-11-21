@@ -90,7 +90,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         await MonoFlutter.launchMono(
                           context,
                           key: monoPublicKey,
-                         showLogs: true,
+                          showLogs: true,
                           reference: 'reference',
                           onClose: () {
                             print('onClose');
