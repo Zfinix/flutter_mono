@@ -7,9 +7,9 @@ This package makes it easy to use the Mono connect widget in a flutter project.
 ## 📸 Screen Shots
 
 <p float="left">
-<img src="https://github.com/Zfinix/flutter_mono/blob/main/1.png?raw=true" width="200">
-<img src="https://github.com/Zfinix/flutter_mono/blob/main/2.png?raw=true" width="200">
-<img src="https://github.com/Zfinix/flutter_mono/blob/main/3.png?raw=true" width="200">
+<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/1.png?raw=true" width="200">
+<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/2.png?raw=true" width="200">
+<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/3.png?raw=true" width="200">
 </p>
 
 ### 🚀 How to Use plugin
