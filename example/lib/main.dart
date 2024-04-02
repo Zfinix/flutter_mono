@@ -86,41 +86,7 @@ class HomePageState extends State<HomePage> {
                         ),
                       ),
                     ),
-                    onPressed: () async {
-                      try {
-                        FlutterMono(
-                          apiKey: 'test_pk_lwWSeByMA8yGfckIN87I',
-                          reference: 'random_string',
-                          showLogs: true,
-                          customer: const MonoCustomer(
-                            newCustomer: MonoNewCustomerModel(
-                              name: "Samuel Olamide", // REQUIRED
-                              email: "samuel@neem.com", // REQUIRED
-                              identity: MonoNewCustomerIdentity(
-                                type: "bvn",
-                                number: "2323233239",
-                              ),
-                            ),
-                          ),
-                          configJson: const {
-                            "selectedInstitution": {
-                              "id": "5f2d08be60b92e2888287702",
-                              "auth_method": "mobile_banking"
-                            }
-                          },
-                          onLoad: () => log('widget_loaded'),
-                          onEvent: (eventName, data) => log(
-                            '$eventName: $data',
-                          ),
-                          onClose: (it) {
-                            log('Success: $it');
-                            code = it;
-                          },
-                        ).launchMono(context);
-                      } catch (e) {
-                        log(e.toString());
-                      }
-                    },
+                    onPressed: () => launch(context),
                   ),
                 ),
               ],
@@ -129,5 +95,41 @@ class HomePageState extends State<HomePage> {
         ),
       ),
     );
+  }
+
+  void launch(BuildContext context) {
+    try {
+      FlutterMono(
+        apiKey: 'test_pk_lwWSeByMA8yGfckIN87I',
+        reference: 'random_string',
+        showLogs: true,
+        customer: const MonoCustomer(
+          newCustomer: MonoNewCustomerModel(
+            name: "Samuel Olamide", // REQUIRED
+            email: "samuel@neem.com", // REQUIRED
+            identity: MonoNewCustomerIdentity(
+              type: "bvn",
+              number: "2323233239",
+            ),
+          ),
+        ),
+        configJson: const {
+          "selectedInstitution": {
+            "id": "5f2d08be60b92e2888287702",
+            "auth_method": "mobile_banking"
+          }
+        },
+        onLoad: () => log('widget_loaded'),
+        onEvent: (eventName, data) => log(
+          '$eventName: $data',
+        ),
+        onClose: (it) {
+          log('Success: $it');
+          code = it;
+        },
+      ).launchMono(context);
+    } catch (e) {
+      log(e.toString());
+    }
   }
 }

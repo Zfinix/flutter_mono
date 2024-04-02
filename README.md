@@ -7,9 +7,9 @@ This package makes it easy to use the Mono connect widget in a flutter project.
 ## 📸 Screen Shots
 
 <p float="left">
-<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/1.png?raw=true" width="200">
-<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/2.png?raw=true" width="200">
-<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/3.png?raw=true" width="200">
+<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/1.png?raw=true" width="300">
+<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/2.png?raw=true" width="300">
+<img src="https://github.com/Zfinix/flutter_mono/blob/main/img/3.png?raw=true" width="300">
 </p>
 
 ### 🚀 How to Use plugin
@@ -19,53 +19,41 @@ This package makes it easy to use the Mono connect widget in a flutter project.
 ```dart
 import 'package:flutter_mono/flutter_mono.dart';
 
-  void launch() async {
-       await FlutterMono(
-               context,
-               apiKey: 'Your Public Key', // from https://app.withmono.com/apps
-               reference: "some_random_string"
-               reference: 'random_string',
-                  showLogs: true,
-                  customer: const MonoCustomer(
-                     newCustomer: MonoNewCustomerModel(
-                        name: "Samuel Olamide", // REQUIRED
-                        email: "samuel@neem.com", // REQUIRED
-                        identity: MonoNewCustomerIdentity(
-                        type: "bvn",
-                        number: "2323233239",
-                     ),
-                  ),
-               ),
-               configJson: const {
-                  "selectedInstitution": {
-                     "id": "5f2d08be60b92e2888287702",
-                     "auth_method": "mobile_banking"
-                     }
-                  },
-               showLogs: true,
-               onClose: () {
-                  print('onClose');
-               },
-               onLoad: () {
-                  print('onLoad');
-               },
-               onEvent: (eventName, eventData) {
-                  switch (eventName) {
-                     case 'mono.connect.institution_selected':
-                     /// do something
-                     break;
-                  },
-               },
-               onLoad: () => log('widget_loaded'),
-               onEvent: (eventName, data) => log(
-                  '$eventName: $data',
-               ),
-               onClose: (it) {
-                  log('Success: $it');
-                            code = it;
-               },
-      ).launchMono();
-  }
+ void launch() async {
+    FlutterMono(
+      apiKey: 'Your Public Key', // from https://app.withmono.com/apps
+      reference: "some_random_string",
+      showLogs: true,
+      customer: const MonoCustomer(
+        newCustomer: MonoNewCustomerModel(
+          name: "Samuel Olamide", // REQUIRED
+          email: "samuel@neem.com", // REQUIRED
+          identity: MonoNewCustomerIdentity(
+            type: "bvn",
+            number: "2323233239",
+          ),
+        ),
+        existingCustomer: MonoExistingCustomerModel(
+          id: "1234-RTFG-ABCD", // REQUIRED
+        ),
+      ),
+      configJson: const {
+        "selectedInstitution": {
+          "id": "5f2d08be60b92e2888287702",
+          "auth_method": "mobile_banking"
+        }
+      },
+      onClose: (it) =>log('Success: $it'),
+      onLoad: () => log('widget_loaded'),
+      onEvent: (eventName, eventData) {
+        switch (eventName) {
+          case 'mono.connect.institution_selected':
+            /// do something
+            break;
+        }
+      },
+    ).launchMono(context);
+ }
 ```
 
 - Use MonoView widget
@@ -73,37 +61,43 @@ import 'package:flutter_mono/flutter_mono.dart';
 ```dart
 import 'package:flutter_mono/flutter_mono.dart';
 
-     ...
+   ...
 
-   MonoView(
+   FlutterMono(
       apiKey: 'Your Public Key', // from https://app.withmono.com/apps
-      reference: "some_random_string"
-      configJson: '''{
-          "selectedInstitution": {
-            "id": "5f2d08c060b92e2888287706",
-            "auth_method": "internet_banking"
-           }
-      }''' /// must be a valid JSON string
+      reference: "some_random_string",
       showLogs: true,
-      onClose: () {
-         print('onClose');
+      customer: const MonoCustomer(
+        newCustomer: MonoNewCustomerModel(
+          name: "Samuel Olamide", // REQUIRED
+          email: "samuel@neem.com", // REQUIRED
+          identity: MonoNewCustomerIdentity(
+            type: "bvn",
+            number: "2323233239",
+          ),
+        ),
+        existingCustomer: MonoExistingCustomerModel(
+          id: "1234-RTFG-ABCD", // REQUIRED
+        ),
+      ),
+      configJson: const {
+        "selectedInstitution": {
+          "id": "5f2d08be60b92e2888287702",
+          "auth_method": "mobile_banking"
+        }
       },
-      onLoad: () {
-         print('onLoad');
-      },
+      onClose: (it) =>log('Success: $it'),
+      onLoad: () => log('widget_loaded'),
       onEvent: (eventName, eventData) {
-         switch (eventName) {
-            case 'mono.connect.institution_selected':
+        switch (eventName) {
+          case 'mono.connect.institution_selected':
             /// do something
             break;
-         }
+        }
       },
-      onSuccess: (data) {
-         print('Success: ${data.toJson()}');
-      },
-   )
+    )
 
-      ...
+   ...
 
 ```
 
