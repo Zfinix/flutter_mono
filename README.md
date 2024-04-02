@@ -22,7 +22,7 @@ import 'package:flutter_mono/flutter_mono.dart';
   void launch() async {
        await FlutterMono(
                context,
-               key: 'Your Public Key', // from https://app.withmono.com/apps
+               apiKey: 'Your Public Key', // from https://app.withmono.com/apps
                reference: "some_random_string"
                reference: 'random_string',
                   showLogs: true,
