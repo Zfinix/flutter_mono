@@ -1,0 +1,87 @@
+Restarted application in 369ms.
+Reloaded 0 libraries in 247ms (compile: 15 ms, reload: 0 ms, reassemble: 49 ms).
+[log]
+<!DOCTYPE html>
+<html>
+
+<head>
+    <base href="/">
+
+    <meta charset="UTF-8">
+    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
+    <meta name="description" content="Flutter Mono Connect Widget">
+    <title>Mono Connect</title>
+    <script src="https://connect.withmono.com/connect.js"></script>
+</head>
+
+<body onload="setupMonoConnect()">
+    <script type="text/javascript">
+
+        // Create our shared stylesheet:
+        var style = document.createElement("style");
+
+        // Add EventListener for onMessage Event
+        window.addEventListener('message', (event) => {
+            sendMessage(event.data)
+        });
+
+        // Send callback to dart JSMessageClient
+        function sendMessage(message) {
+            if (window.MonoEventJSChannel && window.MonoEventJSChannel.postMessage) {
+                MonoEventJSChannel.postMessage(JSON.stringify(message));
+            }
+        }
+
+        // Send raw callback to dart JSMessageClient
+        function sendMessageRaw(message) {
+            if (window.MonoEventJSChannel && window.MonoEventJSChannel.postMessage) {
+                MonoEventJSChannel.postMessage(message);
+            }
+        }
+
+        // Send error callback to dart JSMessageClient
+        function sendErrorMessage(error) {
+            if (window.MonoEventJSChannel && window.MonoEventJSChannel.postMessage) {
+                MonoEventJSChannel.postMessage({ type: `mono.connect.error`, error: error });
+            }
+        }
+        window.onload = setupMonoConnect;
+        function setupMonoConnect() {
+            const connect = new Connect({
+                key: "test_pk_lwWSeByMA8yGfckIN87I",
+                reference: "random_string",
+                onSuccess: (response) => sendMessage({ type: `mono.connect.success`, data: response.code }),
+                onLoad: () => sendMessage({ type: `mono.connect.load` }),
+                onClose: () => sendMessage({ type: `mono.connect.close` }),
+                onEvent: (event, data) => sendMessage({
+                    type: `mono.connect.event`,
+                    event: event,
+                    data: data,
+                }),
+                data: {
+                    customer: { "name": "Samuel Olamide", "email": "samuel@neem.com", "identity": { "type": "bvn", "number": "2323233239" } }
+                }
+            });
+
+            const config = {
+                selectedInstitution: {
+                    id: "6467aad147ccd75fc766fd43",
+                    auth_method: "mobile_banking"
+                }
+            }
+
+            connect.setup(config)
+            connect.open()
+            function sendMessage(message) {
+                if (window.MonoClientInterface && window.MonoClientInterface.postMessage) {
+                    MonoClientInterface.postMessage(JSON.stringify(message));
+                    console.log(JSON.stringify(message))
+                }
+            }
+        }
+
+    </script>
+
+</body>
+
+</html>

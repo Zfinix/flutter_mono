@@ -20,16 +20,28 @@ This package makes it easy to use the Mono connect widget in a flutter project.
 import 'package:flutter_mono/flutter_mono.dart';
 
   void launch() async {
-       await MonoFlutter.launchMono(
+       await FlutterMono(
                context,
                key: 'Your Public Key', // from https://app.withmono.com/apps
                reference: "some_random_string"
-               configJson: '''{
+               reference: 'random_string',
+                  showLogs: true,
+                  customer: const MonoCustomer(
+                     newCustomer: MonoNewCustomerModel(
+                        name: "Samuel Olamide", // REQUIRED
+                        email: "samuel@neem.com", // REQUIRED
+                        identity: MonoNewCustomerIdentity(
+                        type: "bvn",
+                        number: "2323233239",
+                     ),
+                  ),
+               ),
+               configJson: const {
                   "selectedInstitution": {
-                    "id": "5f2d08c060b92e2888287706", 
-                    "auth_method": "internet_banking" 
-                  }
-               }''' /// must be a valid JSON string
+                     "id": "5f2d08be60b92e2888287702",
+                     "auth_method": "mobile_banking"
+                     }
+                  },
                showLogs: true,
                onClose: () {
                   print('onClose');
@@ -43,10 +55,16 @@ import 'package:flutter_mono/flutter_mono.dart';
                      /// do something
                      break;
                   },
-                  onSuccess: (data) {
-                     print('Success: ${data.toJson()}');
-                  },
-               );
+               },
+               onLoad: () => log('widget_loaded'),
+               onEvent: (eventName, data) => log(
+                  '$eventName: $data',
+               ),
+               onClose: (it) {
+                  log('Success: $it');
+                            code = it;
+               },
+      ).launchMono();
   }
 ```
 
@@ -62,8 +80,8 @@ import 'package:flutter_mono/flutter_mono.dart';
       reference: "some_random_string"
       configJson: '''{
           "selectedInstitution": {
-            "id": "5f2d08c060b92e2888287706", 
-            "auth_method": "internet_banking" 
+            "id": "5f2d08c060b92e2888287706",
+            "auth_method": "internet_banking"
            }
       }''' /// must be a valid JSON string
       showLogs: true,

@@ -1,71 +1,271 @@
+import 'dart:async';
+import 'dart:convert';
+
+import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_mono/src/models/success_model.dart';
-import 'package:flutter_mono/src/utils/extensions.dart';
+import 'package:flutter/services.dart';
+import 'package:flutter_mono/src/connect/connect.dart';
+import 'package:flutter_mono/src/models/models.dart';
+import 'package:flutter_mono/src/utils/utils.dart';
+import 'package:flutter_mono/src/views/error_view.dart';
+import 'package:webview_flutter/webview_flutter.dart';
 
-import '../flutter_mono.dart';
+const _loggerName = 'MonoFlutterLog';
 
-class MonoFlutter {
-  // Launch Flutter Mono
-  static Future launchMono(
-    BuildContext _, {
+class FlutterMono extends StatefulWidget {
+  /// Public Key from your https://app.withmono.com/apps
+  final String apiKey;
 
-    /// Public Key from your https://app.withmono.com/apps
-    String? key,
+  /// The new mono widget now expects a scope parameter with its string value set to “auth”.
+  final String scope;
 
-    /// Allows an optional configuration object to be passed.
-    /// When the setup method is called without a config object,
-    /// the list of institutions will be displayed for a user to select from. https://github.com/withmono/connect.js#setupconfig-object
-    String? configJson,
+  /// The customer objects expects the following keys based on the following conditions:
+  /// New Customers: For new customers, the customer object expects the user’s name, email and identity
+  /// Existing Customers: For existing customers, the customer object expects only the customer ID.
+  final MonoCustomer customer;
 
-    /// Success callback
-    void Function(MonoSuccessModel code)? onSuccess,
+  /// Allows an optional configuration object to be passed.
+  /// When the setup method is called without a config object,
+  /// the list of institutions will be displayed for a user to select from. https://github.com/withmono/connect.js#setupconfig-object
+  final Map<String, dynamic> configJson;
 
-    /// This optional function is called when certain events in the Mono Connect flow have occurred,
-    /// for example, when the user selected an institution. This enables your application to gain
-    /// further insight into the Mono Connect onboarding flow.
-    ///
-    ///
-    /// The onEvent callback returns two paramters, eventName a string containing
-    /// the event name and data an object that contains event metadata.
+  /// This optional string is used as a reference to the current
+  /// instance of Mono Connect. It will be passed to the data object
+  /// in all onEvent callbacks. It's recommended to pass a random string.
+  final String? reference;
 
-    void Function(String eventName, Map<String, dynamic> eventData)? onEvent,
+  /// This optional function is called when certain events in the Mono Connect flow have occurred,
+  /// for example, when the user selected an institution. This enables your application to gain
+  /// further insight into the Mono Connect onboarding flow.
+  ///
+  ///
+  /// The onEvent callback returns two paramters,
+  ///
+  /// `event` a string containing The event name and
+  ///
+  /// `data` an object that contains event metadata.
 
-    /// Triggered on Connect Widget close
-    Function? onClose,
+  final Function(String event, Map<String, dynamic> data)? onEvent;
 
-    /// Triggered on Connect Widget Load
-    Function? onLoad,
+  /// Triggered on Connect Widget close
+  final ValueChanged<String>? onClose;
 
-    /// Error Widget will show if loading fails
-    Widget? error,
+  /// Triggered on Connect Widget Load
+  final Function? onLoad;
 
-    /// Show MonoView Logs
-    bool showLogs = false,
-    String? reference,
-  }) async =>
-      showDialog(
-        builder: (context) => Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Center(
-              child: Container(
-                width: context.screenWidth(.9),
-                height: context.screenHeight(.73),
-                child: MonoView(
-                  apiKey: key,
-                  error: error,
-                  onSuccess: onSuccess,
-                  onLoad: onLoad,
-                  onClose: onClose,
-                  onEvent: onEvent,
-                  showLogs: showLogs,
-                  configJson: configJson,
-                ),
+  /// Error Widget will show if loading fails
+  final Widget? errorView;
+
+  /// Show MonoView Logs
+  final bool showLogs;
+
+  const FlutterMono({
+    super.key,
+    required this.apiKey,
+    required this.customer,
+    this.errorView,
+    this.scope = 'auth',
+    this.onLoad,
+    this.onClose,
+    this.onEvent,
+    this.reference,
+    this.configJson = const {},
+    this.showLogs = false,
+  });
+
+  void launchMono(BuildContext context) => showDialog(
+        context: context,
+        builder: (_) => this,
+      );
+
+  @override
+  _FlutterMonoState createState() => _FlutterMonoState();
+}
+
+class _FlutterMonoState extends State<FlutterMono> {
+  final controller = WebViewController();
+
+  @override
+  void initState() {
+    super.initState();
+    handleInitialization();
+  }
+
+  final _controller = Completer<WebViewController>();
+  Future<WebViewController> get _webViewController => _controller.future;
+
+  bool _isLoading = true;
+  bool get isLoading => _isLoading;
+  set isLoading(bool val) {
+    _isLoading = val;
+    setState(() {});
+  }
+
+  bool _hasError = false;
+  bool get hasError => _hasError;
+  set hasError(bool val) {
+    _hasError = val;
+    setState(() {});
+  }
+
+  int? _loadingPercent;
+  int? get loadingPercent => _loadingPercent;
+  set loadingPercent(int? val) {
+    _loadingPercent = val;
+    if (mounted) setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          ClipRRect(
+            borderRadius: BorderRadius.circular(30),
+            child: SizedBox(
+              height: context.screenHeight(.7),
+              child: FutureBuilder<List<ConnectivityResult>>(
+                future: Connectivity().checkConnectivity(),
+                builder: (context, snapshot) {
+                  return switch (hasError) {
+                    true => widget.errorView ??
+                        ErrorView(
+                          reload: () async {
+                            setState(() {});
+                            (await _webViewController).reload();
+                          },
+                        ),
+                    false => Stack(
+                        alignment: Alignment.center,
+                        children: [
+                          if (isLoading == true) ...[
+                            const CupertinoActivityIndicator(),
+                          ],
+
+                          /// Paystack Webview
+                          AnimatedOpacity(
+                            duration: const Duration(milliseconds: 400),
+                            opacity: isLoading == true && _loadingPercent != 100
+                                ? 0
+                                : 1,
+                            child: WebViewWidget(
+                              controller: controller,
+                            ),
+                          ),
+                        ],
+                      )
+                  };
+                },
               ),
             ),
-          ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// Handle WebView initialization
+  void handleInitialization() async {
+    await SystemChannels.textInput.invokeMethod<String>('TextInput.hide');
+    // log(
+    //   MonoConnect.createWidgetHtml(
+    //     connectConfig: (
+    //       key: widget.apiKey,
+    //       customer: widget.customer,
+    //       reference: widget.reference,
+    //       scope: widget.scope,
+    //       configJson: switch (widget.configJson.isEmpty) {
+    //         true => '',
+    //         false => json.encode(widget.configJson),
+    //       },
+    //     ),
+    //   ),
+    // );
+    controller
+      ..loadHtmlString(
+        MonoConnect.createWidgetHtml(
+          connectConfig: (
+            key: widget.apiKey,
+            customer: widget.customer,
+            reference: widget.reference,
+            scope: widget.scope,
+            configJson: switch (widget.configJson.isEmpty) {
+              true => '',
+              false => json.encode(widget.configJson),
+            },
+          ),
         ),
-        context: _,
-      );
+      )
+      ..enableZoom(false)
+      ..addJavaScriptChannel(
+        MonoConnect.eventHandler,
+        onMessageReceived: (JavaScriptMessage data) {
+          final rawData = data.message
+              .removePrefix('"')
+              .removeSuffix('"')
+              .replaceAll(r'\', '');
+          try {
+            handleResponse(rawData);
+          } catch (e) {
+            logger(e.toString());
+          }
+        },
+      )
+      ..setNavigationDelegate(
+        NavigationDelegate(
+          onPageStarted: (_) => isLoading = true,
+          onWebResourceError: (e) {
+            logger(e.toString());
+          },
+          onProgress: (it) => loadingPercent = it,
+          onPageFinished: (_) => isLoading = false,
+          onNavigationRequest: (req) {
+            return NavigationDecision.navigate;
+          },
+        ),
+      )
+      ..setUserAgent(
+          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36')
+      ..setJavaScriptMode(JavaScriptMode.unrestricted);
+  }
+
+  /// parse event from javascript channel
+  void handleResponse(String body) async {
+    try {
+      final Map<String, dynamic> bodyMap = json.decode(body);
+      String? key = bodyMap['type'] as String?;
+      final data = bodyMap['data'] as Map<String, dynamic>? ?? {};
+      if (key != null) {
+        switch (key) {
+          case 'mono.widget.event':
+            var eventName = bodyMap['event'] as String;
+            if (widget.onEvent != null) widget.onEvent!(eventName, bodyMap);
+            break;
+          case 'mono.widget.close':
+          case 'mono.modal.closed':
+            final code = data['code'] as String? ?? '';
+            Navigator.pop(context);
+            if (mounted && widget.onClose != null) widget.onClose?.call(code);
+            break;
+          case 'onLoad':
+            if (mounted && widget.onLoad != null) widget.onLoad!();
+            break;
+          default:
+            if (mounted && widget.onEvent != null)
+              widget.onEvent?.call(key, data);
+        }
+      }
+    } catch (e) {
+      logger('$_loggerName: ${e.toString()}');
+    }
+  }
+
+  void logger(String log) {
+    if (widget.showLogs == true) {
+      print('$_loggerName: $log');
+    }
+  }
 }

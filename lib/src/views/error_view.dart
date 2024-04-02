@@ -19,7 +19,7 @@ class ErrorView extends StatelessWidget {
               Padding(
                 padding: const EdgeInsets.all(20.0),
                 child: Text(
-                  'Could not connect with Mono',
+                  'Please connect to an active internet connection!',
                   textAlign: TextAlign.center,
                 ),
               ),
@@ -27,7 +27,7 @@ class ErrorView extends StatelessWidget {
                 padding: const EdgeInsets.all(8.0),
                 child: CupertinoButton(
                   child: Text('Reload'),
-                  color: Colors.blue,
+                  color: Colors.black,
                   onPressed: reload as void Function()?,
                 ),
               ),
