@@ -145,7 +145,7 @@ class _FlutterMonoState extends State<FlutterMono> {
                             const CupertinoActivityIndicator(),
                           ],
 
-                          /// Paystack Webview
+                          /// Webview
                           AnimatedOpacity(
                             duration: const Duration(milliseconds: 400),
                             opacity: isLoading == true && _loadingPercent != 100
@@ -170,36 +170,9 @@ class _FlutterMonoState extends State<FlutterMono> {
   /// Handle WebView initialization
   void handleInitialization() async {
     await SystemChannels.textInput.invokeMethod<String>('TextInput.hide');
-    // log(
-    //   MonoConnect.createWidgetHtml(
-    //     connectConfig: (
-    //       key: widget.apiKey,
-    //       customer: widget.customer,
-    //       reference: widget.reference,
-    //       scope: widget.scope,
-    //       configJson: switch (widget.configJson.isEmpty) {
-    //         true => '',
-    //         false => json.encode(widget.configJson),
-    //       },
-    //     ),
-    //   ),
-    // );
+
     controller
-      ..loadHtmlString(
-        MonoConnect.createWidgetHtml(
-          connectConfig: (
-            key: widget.apiKey,
-            customer: widget.customer,
-            reference: widget.reference,
-            scope: widget.scope,
-            configJson: switch (widget.configJson.isEmpty) {
-              true => '',
-              false => json.encode(widget.configJson),
-            },
-          ),
-        ),
-      )
-      ..enableZoom(false)
+      ..enableZoom(true)
       ..addJavaScriptChannel(
         MonoConnect.eventHandler,
         onMessageReceived: (JavaScriptMessage data) {
@@ -220,16 +193,34 @@ class _FlutterMonoState extends State<FlutterMono> {
           onWebResourceError: (e) {
             logger(e.toString());
           },
-          onProgress: (it) => loadingPercent = it,
-          onPageFinished: (_) => isLoading = false,
-          onNavigationRequest: (req) {
-            return NavigationDecision.navigate;
+          onProgress: (it) {
+            loadingPercent = it;
+            print(it);
+          },
+          onPageFinished: (_) {
+            isLoading = false;
           },
         ),
       )
-      ..setUserAgent(
-          'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/115.0.0.0 Safari/537.36')
-      ..setJavaScriptMode(JavaScriptMode.unrestricted);
+      ..setUserAgent('Mozilla/5.0 (Linux; Android 10; Pixel 3 XL) '
+          'AppleWebKit/537.36 (KHTML, like Gecko) '
+          'Chrome/88.0.4324.93 '
+          'Mobile Safari/537.36')
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
+      ..loadHtmlString(
+        MonoConnect.createWidgetHtml(
+          connectConfig: (
+            key: widget.apiKey,
+            customer: widget.customer,
+            reference: widget.reference,
+            scope: widget.scope,
+            configJson: switch (widget.configJson.isEmpty) {
+              true => '',
+              false => json.encode(widget.configJson),
+            },
+          ),
+        ),
+      );
   }
 
   /// parse event from javascript channel

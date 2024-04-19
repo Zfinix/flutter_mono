@@ -1,3 +1,6 @@
+## [2.1.0+1]
+- Fixed Android UI bug
+
 ## [2.1.0]
 
 - Refactored `MonoFlutter` to `FlutterMono`

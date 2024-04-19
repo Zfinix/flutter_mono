@@ -1,6 +1,3 @@
-Restarted application in 369ms.
-Reloaded 0 libraries in 247ms (compile: 15 ms, reload: 0 ms, reassemble: 49 ms).
-[log]
 <!DOCTYPE html>
 <html>
 
@@ -8,8 +5,8 @@ Reloaded 0 libraries in 247ms (compile: 15 ms, reload: 0 ms, reassemble: 49 ms).
     <base href="/">
 
     <meta charset="UTF-8">
-    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
     <meta name="description" content="Flutter Mono Connect Widget">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mono Connect</title>
     <script src="https://connect.withmono.com/connect.js"></script>
 </head>
@@ -24,6 +21,19 @@ Reloaded 0 libraries in 247ms (compile: 15 ms, reload: 0 ms, reassemble: 49 ms).
         window.addEventListener('message', (event) => {
             sendMessage(event.data)
         });
+
+        // Override default JS Console function
+        console._log_old = console.log
+        console.log = function (msg) {
+            sendMessageRaw(msg);
+            console._log_old(msg);
+        }
+
+        console._error_old = console.error
+        console.error = function (msg) {
+            sendMessageRaw(msg);
+            console._error_old(msg);
+        }
 
         // Send callback to dart JSMessageClient
         function sendMessage(message) {
@@ -45,11 +55,14 @@ Reloaded 0 libraries in 247ms (compile: 15 ms, reload: 0 ms, reassemble: 49 ms).
                 MonoEventJSChannel.postMessage({ type: `mono.connect.error`, error: error });
             }
         }
+
+
         window.onload = setupMonoConnect;
         function setupMonoConnect() {
+
             const connect = new Connect({
                 key: "test_pk_lwWSeByMA8yGfckIN87I",
-                reference: "random_string",
+                reference: `random_string`.length > 0 ? `random_string` : null,
                 onSuccess: (response) => sendMessage({ type: `mono.connect.success`, data: response.code }),
                 onLoad: () => sendMessage({ type: `mono.connect.load` }),
                 onClose: () => sendMessage({ type: `mono.connect.close` }),
@@ -63,19 +76,18 @@ Reloaded 0 libraries in 247ms (compile: 15 ms, reload: 0 ms, reassemble: 49 ms).
                 }
             });
 
-            const config = {
-                selectedInstitution: {
-                    id: "6467aad147ccd75fc766fd43",
-                    auth_method: "mobile_banking"
-                }
+            if (`{"selectedInstitution":{"id":"5f2d08be60b92e2888287702","auth_method":"mobile_banking"}}`.length > 0) {
+                const config = JSON.parse(`{"selectedInstitution":{"id":"5f2d08be60b92e2888287702","auth_method":"mobile_banking"}}`);
+                connect.setup(config)
+            } else {
+                connect.setup()
             }
 
-            connect.setup(config)
             connect.open()
             function sendMessage(message) {
                 if (window.MonoClientInterface && window.MonoClientInterface.postMessage) {
                     MonoClientInterface.postMessage(JSON.stringify(message));
-                    console.log(JSON.stringify(message))
+
                 }
             }
         }

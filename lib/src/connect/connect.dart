@@ -79,8 +79,8 @@ class MonoConnect {
     <base href="/">
 
     <meta charset="UTF-8">
-    <meta content="IE=Edge" http-equiv="X-UA-Compatible">
     <meta name="description" content="Flutter Mono Connect Widget">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mono Connect</title>
     $script
 </head>
