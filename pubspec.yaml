@@ -12,6 +12,8 @@ dependencies:
   webview_flutter: ^4.7.0
   connectivity_plus: ^6.0.1
   equatable: ^2.0.5
+  permission_handler: ^11.3.1
+  webview_flutter_wkwebview: ^3.17.0
 
 dev_dependencies:
   flutter_test:

@@ -3,13 +3,16 @@ import 'dart:convert';
 
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/cupertino.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_mono/src/connect/connect.dart';
+import 'package:flutter_mono/src/const/const.dart';
 import 'package:flutter_mono/src/models/models.dart';
 import 'package:flutter_mono/src/utils/utils.dart';
 import 'package:flutter_mono/src/views/error_view.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+import 'package:webview_flutter_wkwebview/webview_flutter_wkwebview.dart';
 
 const _loggerName = 'MonoFlutterLog';
 
@@ -25,10 +28,8 @@ class FlutterMono extends StatefulWidget {
   /// Existing Customers: For existing customers, the customer object expects only the customer ID.
   final MonoCustomer customer;
 
-  /// Allows an optional configuration object to be passed.
-  /// When the setup method is called without a config object,
-  /// the list of institutions will be displayed for a user to select from. https://github.com/withmono/connect.js#setupconfig-object
-  final Map<String, dynamic> configJson;
+  /// Allows an optional selected institution to be passed.
+  final ConnectInstitution? selectedInstitution;
 
   /// This optional string is used as a reference to the current
   /// instance of Mono Connect. It will be passed to the data object
@@ -70,7 +71,7 @@ class FlutterMono extends StatefulWidget {
     this.onClose,
     this.onEvent,
     this.reference,
-    this.configJson = const {},
+    this.selectedInstitution,
     this.showLogs = false,
   });
 
@@ -84,7 +85,7 @@ class FlutterMono extends StatefulWidget {
 }
 
 class _FlutterMonoState extends State<FlutterMono> {
-  final controller = WebViewController();
+  late WebViewController controller;
 
   @override
   void initState() {
@@ -169,12 +170,25 @@ class _FlutterMonoState extends State<FlutterMono> {
 
   /// Handle WebView initialization
   void handleInitialization() async {
+    late final PlatformWebViewControllerCreationParams params;
+    params = WebViewPlatform.instance is WebKitWebViewPlatform
+        ? WebKitWebViewControllerCreationParams(
+            allowsInlineMediaPlayback: true,
+          )
+        : const PlatformWebViewControllerCreationParams();
+
+    controller = WebViewController.fromPlatformCreationParams(
+      params,
+      onPermissionRequest: (request) => request.grant(),
+    );
+
     await SystemChannels.textInput.invokeMethod<String>('TextInput.hide');
 
     controller
+      ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..enableZoom(true)
       ..addJavaScriptChannel(
-        MonoConnect.eventHandler,
+        Constants.eventHandler,
         onMessageReceived: (JavaScriptMessage data) {
           final rawData = data.message
               .removePrefix('"')
@@ -205,22 +219,58 @@ class _FlutterMonoState extends State<FlutterMono> {
       ..setUserAgent('Mozilla/5.0 (Linux; Android 10; Pixel 3 XL) '
           'AppleWebKit/537.36 (KHTML, like Gecko) '
           'Chrome/88.0.4324.93 '
-          'Mobile Safari/537.36')
-      ..setJavaScriptMode(JavaScriptMode.unrestricted)
-      ..loadHtmlString(
-        MonoConnect.createWidgetHtml(
-          connectConfig: (
-            key: widget.apiKey,
-            customer: widget.customer,
-            reference: widget.reference,
-            scope: widget.scope,
-            configJson: switch (widget.configJson.isEmpty) {
-              true => '',
-              false => json.encode(widget.configJson),
-            },
-          ),
-        ),
-      );
+          'Mobile Safari/537.36');
+
+    confirmPermissionsAndLoad();
+  }
+
+  Future<void> confirmPermissionsAndLoad() async {
+    bool isCameraGranted;
+
+    if (!kIsWeb) {
+      // Request camera permission
+      final cameraStatus = await Permission.camera.status;
+      isCameraGranted = cameraStatus.isGranted;
+    } else {
+      isCameraGranted = true;
+    }
+
+    if (!isCameraGranted) {
+      final result = await Permission.camera.request();
+
+      if (result == PermissionStatus.granted) {
+        await loadRequest();
+      }
+    } else {
+      await loadRequest();
+    }
+  }
+
+  Future<void> loadRequest() {
+    final customerJson = {'customer': widget.customer.toMap()};
+    final data = json.encode(customerJson);
+
+    String? extraData;
+    if (widget.selectedInstitution != null) {
+      extraData = widget.selectedInstitution!.toJson();
+    }
+
+    final queryParameters = {
+      'key': widget.apiKey,
+      'version': Constants.version,
+      'scope': widget.scope,
+      'data': data,
+      if (widget.reference != null) 'reference': widget.reference,
+      if (extraData != null) 'selectedInstitution': extraData,
+    };
+
+    final uri = Uri(
+      scheme: Constants.urlScheme,
+      host: Constants.connectHost,
+      queryParameters: queryParameters,
+    );
+
+    return controller.loadRequest(uri);
   }
 
   /// parse event from javascript channel
@@ -235,12 +285,12 @@ class _FlutterMonoState extends State<FlutterMono> {
             var eventName = bodyMap['event'] as String;
             if (widget.onEvent != null) widget.onEvent!(eventName, bodyMap);
             break;
-          case 'mono.widget.close':
-          case 'mono.modal.closed':
+          case 'mono.connect.widget.closed':
             final code = data['code'] as String? ?? '';
             Navigator.pop(context);
             if (mounted && widget.onClose != null) widget.onClose?.call(code);
             break;
+          case 'mono.connect.widget_opened':
           case 'onLoad':
             if (mounted && widget.onLoad != null) widget.onLoad!();
             break;

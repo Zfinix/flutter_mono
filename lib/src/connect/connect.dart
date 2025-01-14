@@ -19,7 +19,7 @@ typedef MonoConnectConfig = ({
 });
 
 class MonoConnect {
-  static const eventHandler = 'MonoEventJSChannel';
+  static const eventHandler = 'MonoClientInterface';
   static String script = '<script src="$CONNECT_WIDGET_URL"></script>';
 
   /// `[JS]` Create EventListener config for message client

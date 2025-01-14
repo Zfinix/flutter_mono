@@ -1,5 +1,9 @@
-/// Event names corespond to the type key returned by the raw event data
-class MonoConnectEvent {
+class Constants {
+  Constants._();
+
+  // Events
+  // Event names correspond to the type key returned by the raw event data
+
   /// Triggered when the user opens the Connect Widget.
   static const OPENED = 'OPENED';
 
@@ -32,4 +36,14 @@ class MonoConnectEvent {
 
   /// Triggered when the widget reports an error.
   static const ERROR = 'ERROR';
+
+  // Constants
+
+  static const String urlScheme = 'https';
+
+  static const String connectHost = 'connect.mono.co';
+
+  static const String version = '2023-12-14';
+
+  static const String eventHandler = 'MonoClientInterface';
 }
