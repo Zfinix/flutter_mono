@@ -29,13 +29,13 @@ final class MonoExistingCustomerModel with EquatableMixin {
 
   Map<String, dynamic> toMap() {
     return {
-      'name': id,
+      'id': id,
     };
   }
 
   factory MonoExistingCustomerModel.fromMap(Map<String, dynamic> map) {
     return MonoExistingCustomerModel(
-      id: map['name'] ?? '',
+      id: map['id'] ?? '',
     );
   }
 
@@ -45,7 +45,7 @@ final class MonoExistingCustomerModel with EquatableMixin {
       MonoExistingCustomerModel.fromMap(json.decode(source));
 
   @override
-  String toString() => 'MonoExistingCustomerModel(name: $id)';
+  String toString() => 'MonoExistingCustomerModel(id: $id)';
 
   @override
   List<Object> get props => [id];

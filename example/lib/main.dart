@@ -112,13 +112,14 @@ class HomePageState extends State<HomePage> {
               number: "2323233239",
             ),
           ),
+          // existingCustomer: MonoExistingCustomerModel(
+          //   id: "6759f68cb587236111eac1d4", // REQUIRED
+          // ),
         ),
-        configJson: const {
-          "selectedInstitution": {
-            "id": "5f2d08be60b92e2888287702",
-            "auth_method": "mobile_banking"
-          }
-        },
+        selectedInstitution: const ConnectInstitution(
+          id: "5f2d08be60b92e2888287702",
+          authMethod: ConnectAuthMethod.mobileBanking,
+        ),
         onLoad: () => log('widget_loaded'),
         onEvent: (eventName, data) => log(
           '$eventName: $data',
