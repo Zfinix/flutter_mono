@@ -238,12 +238,17 @@ class _FlutterMonoState extends State<FlutterMono> {
     if (!isCameraGranted) {
       final result = await Permission.camera.request();
 
-      if (result == PermissionStatus.granted) {
-        await loadRequest();
+      if (result != PermissionStatus.granted) {
+        const snackBar = SnackBar(
+          content: Text('Permissions not granted'),
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(snackBar);
+        }
       }
-    } else {
-      await loadRequest();
     }
+
+    await loadRequest();
   }
 
   Future<void> loadRequest() {
